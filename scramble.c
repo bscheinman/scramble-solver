@@ -1,6 +1,9 @@
+#include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
+#include "queue.h"
 #include "trie.h"
 
 #define BOARD_HEIGHT 4
@@ -28,10 +31,17 @@ int dy[MOVE_COUNT] = { -1, -1, -1, 0, 0, 1, 1, 1 };
 
 void print_words_impl(int i, int j)
 {
-    path start = { i, j, "", dict_trie, as_bitmask(i, j)};
-    linked_list *visits;
-    list_initialize(visits);
-    queue_push(visits, &start);
+    path *start = malloc(sizeof(path));
+    start->x = i;
+    start->y = j;
+    /* this string will be freed later so we need to allocate it on the heap */
+    start->prefix = malloc(sizeof(char));
+    *start->prefix = '\0';
+    start->words = dict_trie;
+    start->visited = as_bitmask(i,j);
+    linked_list *visits = malloc(sizeof(linked_list));
+    list_init(visits);
+    queue_push(visits, start);
 
     while (!list_empty(visits)) {
         path *node = (path *)queue_pop(visits);
@@ -59,7 +69,8 @@ void print_words_impl(int i, int j)
 
             word[prefix_length] = letter;
             /* if this is a valid word itself, then print it */
-            if (children->is_word)
+            /* but ignore one-letter words */
+            if (children->is_word && strlen(word) > 1)
                 printf("%s\n", word);
 
             /* create next node to visit and put it on the queue */
@@ -78,6 +89,7 @@ void print_words_impl(int i, int j)
         free(node->prefix);
         free(node);
     }
+    free(visits);
 }
 
 
@@ -95,7 +107,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    FILE *board_file = fopen(argv[2], 'r');
+    FILE *board_file = fopen(argv[2], "r");
     char line[LINE_LENGTH];
     int line_no = 0;
 
@@ -112,10 +124,13 @@ int main(int argc, char **argv)
     fclose(board_file);
 
 
-    FILE *dict_file = fopen(argv[1], 'r');
+    FILE *dict_file = fopen(argv[1], "r");
     dict_trie = trie_init();
 
     while (fgets(line, LINE_LENGTH, dict_file)) {
+        /* remove trailing newlines before inserting into trie */
+        char *pos;
+        if ((pos = strchr(line, '\n'))) *pos = '\0';
         trie_insert(dict_trie, line);
     }
     fclose(dict_file);
