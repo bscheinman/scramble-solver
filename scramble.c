@@ -10,6 +10,10 @@
 #define BOARD_WIDTH 4
 #define LINE_LENGTH 80
 
+#define RESULT_SUCCESS 0
+#define RESULT_INVALID_USAGE 1
+#define RESULT_INVALID_BOARD 2
+
 char board[BOARD_WIDTH][BOARD_HEIGHT];
 trie *dict_trie;
 
@@ -147,11 +151,12 @@ void print_words(void)
             print_words_impl(i, j);
 }
 
+
 int main(int argc, char **argv)
 {
     if (argc < 3) {
         printf("Usage: scramble dict_file board_file\n");
-        return 1;
+        return RESULT_INVALID_USAGE;
     }
 
     FILE *board_file = fopen(argv[2], "r");
@@ -162,11 +167,15 @@ int main(int argc, char **argv)
         for (size_t i = 0 ; i < BOARD_WIDTH ; ++i) {
             if (!isalpha(line[i])) {
                 printf("all spaces must contain letters\n");
-                return 2;
+                return RESULT_INVALID_BOARD;
             }
             line[i] = tolower(line[i]);
         }
         strncpy(board[line_no++], line, BOARD_WIDTH);
+    }
+    if (line_no < BOARD_HEIGHT) {
+        printf("you must provide %i lines\n", BOARD_HEIGHT);
+        return RESULT_INVALID_BOARD;
     }
     fclose(board_file);
 
@@ -185,4 +194,6 @@ int main(int argc, char **argv)
     print_words();
 
     trie_dispose(dict_trie);
+
+    return RESULT_SUCCESS;
 }
