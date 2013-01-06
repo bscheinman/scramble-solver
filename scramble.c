@@ -67,10 +67,11 @@ void print_words_impl(int i, int j)
     start->x = i;
     start->y = j;
     start->score = letter_scores[letter - 'a'];
-    /* this string will be freed later so we need to allocate it on the heap */
+
     start->prefix = malloc(sizeof(char) * 2);
     *start->prefix = letter;
     *(start->prefix + 1) = '\0';
+
     start->words = trie_get_child(dict_trie, letter);
     /* if there are no words that start with this letter (doesn't occur in practice) then
        we don't need to go any further */
@@ -79,7 +80,9 @@ void print_words_impl(int i, int j)
         free(start);
         return;
     }
-    start->visited = as_bitmask(i, j);;
+    start->visited = as_bitmask(i, j);
+
+    /* initialize list of nodes to visit */
     linked_list *visits = malloc(sizeof(linked_list));
     list_init(visits);
     queue_push(visits, start);
@@ -112,7 +115,7 @@ void print_words_impl(int i, int j)
             int word_score = node->score + letter_scores[letter - 'a'];
             /* if this is a valid word itself, then print it */
             /* but ignore one-letter words */
-            if (children->is_word && strlen(word) > 1)
+            if (children->is_word)
                 printf("%s %i\n", word, word_score);
 
             /* create next node to visit and put it on the queue */
@@ -132,6 +135,8 @@ void print_words_impl(int i, int j)
         free(node->prefix);
         free(node);
     }
+
+    /* starting node has already been freed in the above loop */
     free(visits);
 }
 
