@@ -114,7 +114,6 @@ void print_words_impl(int i, int j)
             word[prefix_length] = letter;
             int word_score = node->score + letter_scores[letter - 'a'];
             /* if this is a valid word itself, then print it */
-            /* but ignore one-letter words */
             if (children->is_word)
                 printf("%s %i\n", word, word_score);
 
