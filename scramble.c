@@ -23,7 +23,7 @@ typedef struct {
     char *prefix;
     int score;
     trie *words;
-    int visited; /* this serves as a bitmask of which characters are contained in the current path */
+    unsigned int visited; /* this serves as a bitmask of which characters are contained in the current path */
 } path;
 
 
@@ -63,6 +63,12 @@ int letter_scores[ALPHABET_SIZE] = {
     /* y */ 3,
     /* z */ 10
 };
+
+/* index 0 represents word length 1, so bonus value for a word w is
+   length_bonuses[strlen(w) - 1] */
+int length_bonuses[BOARD_WIDTH * BOARD_HEIGHT] =
+    { 0, 0, 0, 0, 3, 6, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 };
+
 
 void print_words_impl(int i, int j)
 {
@@ -116,10 +122,13 @@ void print_words_impl(int i, int j)
             if (!children) continue;
 
             word[prefix_length] = letter;
+            /* don't add length bonus until word is actually scored
+               we only track letter values to avoid more indexes into scoring array */
             int word_score = node->score + letter_scores[letter - 'a'];
+
             /* if this is a valid word itself, then print it */
             if (children->is_word)
-                printf("%s %i\n", word, word_score);
+                printf("%s %i\n", word, word_score + length_bonuses[strlen(word) - 1]);
 
             /* create next node to visit and put it on the queue */
             path *next = malloc(sizeof(path));
@@ -172,6 +181,7 @@ int main(int argc, char **argv)
             line[i] = tolower(line[i]);
         }
         strncpy(board[line_no++], line, BOARD_WIDTH);
+        memset(line, 0, sizeof(line));
     }
     if (line_no < BOARD_HEIGHT) {
         printf("you must provide %i lines\n", BOARD_HEIGHT);
