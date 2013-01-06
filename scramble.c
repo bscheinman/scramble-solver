@@ -17,6 +17,7 @@ trie *dict_trie;
 typedef struct {
     int x, y;
     char *prefix;
+    int score;
     trie *words;
     int visited; /* this serves as a bitmask of which characters are contained in the current path */
 } path;
@@ -29,11 +30,41 @@ typedef struct {
 int dx[MOVE_COUNT] = { -1, 0, 1, -1, 1, -1, 0, 1 };
 int dy[MOVE_COUNT] = { -1, -1, -1, 0, 0, 1, 1, 1 };
 
+int letter_scores[ALPHABET_SIZE] = {
+    /* a */ 1,
+    /* b */ 4,
+    /* c */ 4,
+    /* d */ 2,
+    /* e */ 1,
+    /* f */ 4,
+    /* g */ 3,
+    /* h */ 3,
+    /* i */ 1,
+    /* j */ 10,
+    /* k */ 5,
+    /* l */ 2,
+    /* m */ 4,
+    /* n */ 2,
+    /* o */ 1,
+    /* p */ 4,
+    /* q */ 10,
+    /* r */ 1,
+    /* s */ 1,
+    /* t */ 1,
+    /* u */ 2,
+    /* v */ 5,
+    /* w */ 4,
+    /* x */ 8,
+    /* y */ 3,
+    /* z */ 10
+};
+
 void print_words_impl(int i, int j)
 {
     path *start = malloc(sizeof(path));
     start->x = i;
     start->y = j;
+    start->score = 0;
     /* this string will be freed later so we need to allocate it on the heap */
     start->prefix = malloc(sizeof(char));
     *start->prefix = '\0';
@@ -68,15 +99,17 @@ void print_words_impl(int i, int j)
             if (!children) continue;
 
             word[prefix_length] = letter;
+            int word_score = node->score + letter_scores[letter - 'a'];
             /* if this is a valid word itself, then print it */
             /* but ignore one-letter words */
             if (children->is_word && strlen(word) > 1)
-                printf("%s\n", word);
+                printf("%s %i\n", word, word_score);
 
             /* create next node to visit and put it on the queue */
             path *next = malloc(sizeof(path));
             next->x = i;
             next->y = j;
+            next->score = word_score;
             next->prefix = malloc(sizeof(char) * (strlen(word) + 1));
             strcpy(next->prefix, word);
             next->words = children;
