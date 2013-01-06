@@ -62,15 +62,24 @@ int letter_scores[ALPHABET_SIZE] = {
 
 void print_words_impl(int i, int j)
 {
+    char letter = board[i][j];
     path *start = malloc(sizeof(path));
     start->x = i;
     start->y = j;
-    start->score = 0;
+    start->score = letter_scores[letter - 'a'];
     /* this string will be freed later so we need to allocate it on the heap */
-    start->prefix = malloc(sizeof(char));
-    *start->prefix = '\0';
-    start->words = dict_trie;
-    start->visited = 0;
+    start->prefix = malloc(sizeof(char) * 2);
+    *start->prefix = letter;
+    *(start->prefix + 1) = '\0';
+    start->words = trie_get_child(dict_trie, letter);
+    /* if there are no words that start with this letter (doesn't occur in practice) then
+       we don't need to go any further */
+    if (!start->words) {
+        free(start->prefix);
+        free(start);
+        return;
+    }
+    start->visited = as_bitmask(i, j);;
     linked_list *visits = malloc(sizeof(linked_list));
     list_init(visits);
     queue_push(visits, start);
@@ -93,7 +102,7 @@ void print_words_impl(int i, int j)
             /* we can't visit the same space twice in one word */
             if (node->visited & as_bitmask(i, j)) continue;
 
-            char letter = board[i][j];
+            letter = board[i][j];
             trie *children = trie_get_child(node->words, letter);
 
             /* if there aren't any possible words on this path then we can stop here */
