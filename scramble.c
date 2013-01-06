@@ -23,7 +23,8 @@ typedef struct {
 } path;
 
 
-#define as_bitmask(i, j) 1 << (15 - (3 * (i)) - (j))
+/* this won't work with much bigger boards */
+#define as_bitmask(x, y) 1 << (BOARD_HEIGHT * (i) + (j))
 
 /* coordinate changes for each possible move */
 #define MOVE_COUNT 8
@@ -69,7 +70,7 @@ void print_words_impl(int i, int j)
     start->prefix = malloc(sizeof(char));
     *start->prefix = '\0';
     start->words = dict_trie;
-    start->visited = as_bitmask(i,j);
+    start->visited = 0;
     linked_list *visits = malloc(sizeof(linked_list));
     list_init(visits);
     queue_push(visits, start);
